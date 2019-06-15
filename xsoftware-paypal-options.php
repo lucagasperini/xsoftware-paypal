@@ -2,26 +2,19 @@
 
 if(!defined("ABSPATH")) die;
 
-if (!class_exists("xs_paypal_plugin")) :
+if (!class_exists("xs_paypal_options")) :
 
 class xs_paypal_options
 {
 
         private $default = array (
                 'user' => [
-                        'email' => 'your-email@example.com',
                         'client_id' => '',
                         'client_secret' => '',
                 ],
-                'sys' => [
-                        'checkout' => '',
-                        'currency' => 'EUR',
-                ],
-                'vat' => [
-                        'v22' => [
-                                'rate' => 22.00,
-                                'descr' => '22% - GENERICO'
-                        ]
+                'fees' => [
+                        'fixed_fees' => 0,
+                        'var_fees' => 0,
                 ]
         );
 
@@ -51,8 +44,8 @@ class xs_paypal_options
                         wp_die( __( 'Exit!' ) );
                 }
 
-                xs_framework::init_admin_style();
-                xs_framework::init_admin_script();
+
+
 
                 echo '<div class="wrap">';
 
@@ -92,24 +85,9 @@ class xs_paypal_options
                 if(isset($input['user']) && !empty($input['user']))
                         foreach($input['user'] as $key => $value)
                                 $current['user'][$key] = $value;
-                if(isset($input['sys']) && !empty($input['sys']))
-                        foreach($input['sys'] as $key => $value)
-                                $current['sys'][$key] = $value;
-
-                if(isset($input['vat_remove']) && !empty($input['vat_remove'])) {
-                        unset($current['vat'][$input['vat_remove']]);
-                }
-                if(
-                        isset($input['vat']['new_vat']) &&
-                        !empty($input['vat']['new_vat']['key']) &&
-                        !empty($input['vat']['new_vat']['rate']) &&
-                        !empty($input['vat']['new_vat']['descr'])
-                ) {
-                        $key = 'v'.$input['vat']['new_vat']['key'];
-                        $v['rate'] = $input['vat']['new_vat']['rate'];
-                        $v['descr'] = $input['vat']['new_vat']['descr'];
-                        $current['vat'][$key] = $v;
-                }
+                if(isset($input['fees']) && !empty($input['fees']))
+                        foreach($input['fees'] as $key => $value)
+                                $current['fees'][$key] = $value;
 
                 return $current;
         }
@@ -119,47 +97,30 @@ class xs_paypal_options
                 $tab = xs_framework::create_tabs( array(
                         'href' => '?page=xsoftware_paypal',
                         'tabs' => array(
-                                'user' => 'User',
-                                'system' => 'System',
-                                'vat' => 'VAT'
+                                'fees' => 'Fees',
+                                'user' => 'User'
                         ),
-                        'home' => 'user',
+                        'home' => 'fees',
                         'name' => 'main_tab'
                 ));
 
                 switch($tab) {
+                        case 'fees':
+                                $this->show_fees();
+                                return;
                         case 'user':
                                 $this->show_user();
-                                return;
-                        case 'system':
-                                $this->show_system();
-                                return;
-                        case 'vat':
-                                $this->show_vat();
                                 return;
                 }
         }
 
         function show_user()
         {
-                $options = array(
-                        'name' => 'xs_options_paypal[user][email]',
-                        'value' => $this->options['user']['email'],
-                        'echo' => TRUE
-                );
-
-                add_settings_field(
-                        $options['name'],
-                        'User Email',
-                        'xs_framework::create_input',
-                        'paypal',
-                        'section_setting',
-                        $options
-                );
+                $user = $this->options['user'];
 
                 $options = array(
                         'name' => 'xs_options_paypal[user][client_id]',
-                        'value' => $this->options['user']['client_id'],
+                        'value' => $user['client_id'],
                         'echo' => TRUE
                 );
 
@@ -174,7 +135,8 @@ class xs_paypal_options
 
                 $options = array(
                         'name' => 'xs_options_paypal[user][client_secret]',
-                        'value' => $this->options['user']['client_secret'],
+                        'value' => $user['client_secret'],
+                        'type' => 'password',
                         'echo' => TRUE
                 );
 
@@ -188,96 +150,45 @@ class xs_paypal_options
                 );
         }
 
-        function show_vat()
+        function show_fees()
         {
-                $vat = $this->options['vat'];
+                $fees = $this->options['fees'];
 
-                foreach($vat as $key => $values) {
-                        $data[$key]['id'] = $key;
-                        $data[$key]['rate'] = $values['rate'];
-                        $data[$key]['descr'] = $values['descr'];
-                        $data[$key]['remove'] = xs_framework::create_button([
-                                'class' => 'button-primary',
-                                'name' => 'xs_options_paypal[vat_remove]',
-                                'text' => 'Remove',
-                                'value' => $key
-                        ]);
-                }
-                $data['new_vat']['id'] = xs_framework::create_input([
-                        'class' => 'xs_full_width',
-                        'name' => 'xs_options_paypal[vat][new_vat][key]'
-                ]);;
-                $data['new_vat']['rate'] = xs_framework::create_input_number([
-                        'class' => 'xs_full_width',
-                        'name' => 'xs_options_paypal[vat][new_vat][rate]',
-                        'value' => 0,
-                        'step' => 0.01
-                ]);
-                $data['new_vat']['descr'] = xs_framework::create_input([
-                        'class' => 'xs_full_width',
-                        'name' => 'xs_options_paypal[vat][new_vat][descr]'
-                ]);
-
-                xs_framework::create_table([
-                        'class' => 'xs_admin_table xs_full_width',
-                        'data' => $data,
-                        'headers' => ['ID', 'Rate', 'Description', 'Actions']
-                ]);
-        }
-
-        function show_system()
-        {
                 $options = array(
-                        'name' => 'xs_options_paypal[sys][checkout]',
-                        'selected' => $this->options['sys']['checkout'],
-                        'data' => xs_framework::get_wp_pages_link(),
-                        'default' => 'Select a checkout page',
+                        'name' => 'xs_options_paypal[fees][fixed_fees]',
+                        'value' => floatval($fees['fixed_fees']),
+                        'step' => 0.01,
+                        'max' => 99999999,
                         'echo' => TRUE
                 );
 
                 add_settings_field(
                         $options['name'],
-                        'Set checkout page',
-                        'xs_framework::create_select',
-                        'paypal',
-                        'section_setting',
-                        $options
-                );
-                $options = array(
-                        'name' => 'xs_options_paypal[sys][currency]',
-                        'selected' => $this->options['sys']['currency'],
-                        'data' => xs_framework::get_currency_list(),
-                        'default' => 'Select a currency',
-                        'echo' => TRUE
-                );
-
-                add_settings_field(
-                        $options['name'],
-                        'Set Currency',
-                        'xs_framework::create_select',
+                        'Set fixed fees',
+                        'xs_framework::create_input_number',
                         'paypal',
                         'section_setting',
                         $options
                 );
 
                 $options = array(
-                        'name' => 'xs_options_paypal[sys][vat]',
-                        'value' => $this->options['sys']['vat'],
-                        'min' => 0,
+                        'name' => 'xs_options_paypal[fees][var_fees]',
+                        'value' => floatval($fees['var_fees']),
+                        'step' => 0.0001,
                         'max' => 100,
                         'echo' => TRUE
                 );
 
                 add_settings_field(
                         $options['name'],
-                        'Set VAT(%)',
+                        'Set variable fees (%)',
                         'xs_framework::create_input_number',
                         'paypal',
                         'section_setting',
                         $options
                 );
-        }
 
+        }
 
 }
 
