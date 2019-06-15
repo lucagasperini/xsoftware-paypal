@@ -10,9 +10,11 @@ Text Domain: xsoftware_paypal
 
 if(!defined("ABSPATH")) die;
 
-require 'paypal-sdk/bootstrap.php';
+require 'paypal-sdk/autoload.php';
 include 'xsoftware-paypal-options.php';
 
+use PayPal\Auth\OAuthTokenCredential;
+use PayPal\Rest\ApiContext;
 use PayPal\Api\Amount;
 use PayPal\Api\Details;
 use PayPal\Api\Payment;
@@ -35,21 +37,59 @@ class xs_paypal_plugin
                 add_filter('xs_cart_approval_link', [$this, 'get_approval_link']);
                 add_filter('xs_cart_validate', [$this, 'checkout_validation']);
         }
-
-        function get_approval_link($sale_order)
+        /**
+        * Helper method for getting an APIContext for all calls
+        * @param string $clientId Client ID
+        * @param string $clientSecret Client Secret
+        * @return PayPal\Rest\ApiContext
+        */
+        function get_api_context()
         {
+
+                // ### Api context
+                // Use an ApiContext object to authenticate
+                // API calls. The clientId and clientSecret for the
+                // OAuthTokenCredential class can be retrieved from
+                // developer.paypal.com
 
                 if(empty($this->options['user']['client_id'])) {
                         echo 'Set client_id first!';
-                        return;
+                        return FALSE;
                 }
                 if(empty($this->options['user']['client_secret'])) {
                         echo 'Set client_secret first!';
-                        return;
+                        return FALSE;
                 }
 
-                $paypal_id = $this->options['user']['client_id'];
-                $paypal_secret = $this->options['user']['client_secret'];
+                $context = new ApiContext(
+                        new OAuthTokenCredential(
+                        $this->options['user']['client_id'],
+                        $this->options['user']['client_secret']
+                        )
+                );
+
+                // Comment this line out and uncomment the PP_CONFIG_PATH
+                // 'define' block if you want to use static file
+                // based configuration
+
+                if(isset($this->options['user']['mode']) && !empty($this->options['user']['mode']))
+                        $mode = $this->options['user']['mode'];
+                else
+                        $mode = 'sandbox';
+
+                $context->setConfig(
+                        array(
+                        'mode' => $mode,
+                        'cache.enabled' => true,
+                        )
+                );
+
+                return $context;
+        }
+
+
+        function get_approval_link($sale_order)
+        {
 
                 $list = new ItemList();
 
@@ -65,7 +105,7 @@ class xs_paypal_plugin
 
                 }
 
-                $apiContext = getApiContext($paypal_id, $paypal_secret);
+                $apiContext = $this->get_api_context();
                 // ### Payer
                 // A resource representing a Payer that funds a payment
                 // For paypal account payments, set payment method
@@ -146,7 +186,7 @@ class xs_paypal_plugin
                 $paypal_id = $this->options['user']['client_id'];
                 $paypal_secret = $this->options['user']['client_secret'];
 
-                $apiContext = getApiContext($paypal_id, $paypal_secret);
+                $apiContext = $this->get_api_context();
                 // Get the payment Object by passing paymentId
                 // payment id was previously stored in session in
                 // CreatePaymentUsingPayPal.php

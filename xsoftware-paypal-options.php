@@ -11,6 +11,7 @@ class xs_paypal_options
                 'user' => [
                         'client_id' => '',
                         'client_secret' => '',
+                        'mode' => 'sandbox'
                 ],
                 'fees' => [
                         'fixed_fees' => 0,
@@ -43,9 +44,6 @@ class xs_paypal_options
                 if ( !current_user_can( 'manage_options' ) )  {
                         wp_die( __( 'Exit!' ) );
                 }
-
-
-
 
                 echo '<div class="wrap">';
 
@@ -144,6 +142,27 @@ class xs_paypal_options
                         $options['name'],
                         'API Client Secret',
                         'xs_framework::create_input',
+                        'paypal',
+                        'section_setting',
+                        $options
+                );
+
+                $mode = [
+                        'sandbox' => 'Sandbox',
+                        'live' => 'Live'
+                ];
+
+                $options = array(
+                        'name' => 'xs_options_paypal[user][mode]',
+                        'selected' => $user['mode'],
+                        'data' => $mode,
+                        'echo' => TRUE
+                );
+
+                add_settings_field(
+                        $options['name'],
+                        'Set paypal mode',
+                        'xs_framework::create_select',
                         'paypal',
                         'section_setting',
                         $options
