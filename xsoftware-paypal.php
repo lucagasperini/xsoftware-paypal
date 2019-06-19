@@ -92,6 +92,7 @@ class xs_paypal_plugin
         {
 
                 $list = new ItemList();
+                $total_by_prices = 0;
 
 
                 foreach($sale_order['items'] as $id => $values) {
@@ -101,8 +102,21 @@ class xs_paypal_plugin
                         $tmp->setQuantity($values['quantity']);
                         $tmp->setSku(strval($values['id']));
                         $tmp->setPrice($values['price']);
+                        $total_by_prices += floatval($values['price']) * $values['quantity'];
                         $list->addItem($tmp);
 
+                }
+
+                $discount = floatval($sale_order['untaxed']) - floatval($total_by_prices);
+
+                if($discount !== 0) {
+                        $tmp = new Item();
+                        $tmp->setName('Discount');
+                        $tmp->setCurrency($sale_order['currency']);
+                        $tmp->setQuantity(1);
+                        $tmp->setSku(0);
+                        $tmp->setPrice($discount);
+                        $list->addItem($tmp);
                 }
 
                 $apiContext = $this->get_api_context();
