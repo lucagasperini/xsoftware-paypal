@@ -5,7 +5,7 @@ if ( ! function_exists( 'print_paypal_btn' ) ) :
 
 function print_paypal_btn($url)
 {
-        wp_enqueue_style('xs_paypal_style', plugins_url('style/paypal.css', __FILE__));
+        wp_enqueue_style('xs_paypal_style', plugins_url('style/paypal.min.css', __FILE__));
 
 
         echo '<a href="'.$url.'" ><div role="button" data-button=""
