@@ -77,12 +77,10 @@ class xs_paypal_plugin
                 else
                         $mode = 'sandbox';
 
-                $context->setConfig(
-                        array(
+                $context->setConfig([
                         'mode' => $mode,
-                        'cache.enabled' => true,
-                        )
-                );
+                        'cache.enabled' => true
+                ]);
 
                 return $context;
         }
@@ -109,7 +107,7 @@ class xs_paypal_plugin
 
                 $discount = floatval($sale_order['untaxed']) - floatval($total_by_prices);
 
-                if($discount !== 0) {
+                if($discount !== floatval(0)) {
                         $tmp = new Item();
                         $tmp->setName('Discount');
                         $tmp->setCurrency($sale_order['currency']);
@@ -146,8 +144,8 @@ class xs_paypal_plugin
                 // payment approval/ cancellation.
                 $baseUrl = $this->options['sys']['checkout'];
                 $redirectUrls = new RedirectUrls();
-                $redirectUrls->setReturnUrl("$baseUrl/?success=true")
-                ->setCancelUrl("$baseUrl/?success=false");
+                $redirectUrls->setReturnUrl($baseUrl."?success=true")
+                ->setCancelUrl($baseUrl."?success=false");
 
                 // ### Payment
                 // A Payment Resource; create one using
@@ -156,11 +154,7 @@ class xs_paypal_plugin
                 $payment->setIntent("sale")
                 ->setPayer($payer)
                 ->setRedirectUrls($redirectUrls)
-                ->setTransactions(array($transaction));
-
-
-                // For Sample Purposes Only.
-                $request = clone $payment;
+                ->setTransactions([$transaction]);
 
                 // ### Create Payment
                 // Create a payment by calling the 'create' method
