@@ -211,29 +211,58 @@ class xs_paypal_plugin
 
                 $result = $payment->execute($execution, $apiContext);
 
+                $a = $payment->toArray();
 
-                $payment = Payment::get($paymentId, $apiContext);
+                $o['payment'] = [
+                        'id' => $a['id'],
+                        'intent' => $a['intent'],
+                        'state' => $a['state'],
+                        'method' => $a['payer']['payment_method'],
+                ];
 
-                $offset = $payment->toArray();
+                $t = $a['transactions'][0];
 
-                $var_fees = !empty($this->options['fees']['var_fees']) ?
-                        floatval($this->options['fees']['var_fees']) :
-                        0;
+                $o['transaction'] = [
+                        'currency' => $t['amount']['currency'],
+                        'total' => $t['amount']['total'],
+                        'subtotal' => $t['amount']['details']['subtotal'],
+                        'tax' => $t['amount']['details']['tax'],
+                        'shipping' => $t['amount']['details']['shipping'],
+                        'fee' => $t['related_resources'][0]['sale']['transaction_fee']['value'],
+                        'invoice_number' => $t['invoice_number']
+                ];
 
-                $fixed_fees = !empty($this->options['fees']['fixed_fees']) ?
-                        floatval($this->options['fees']['fixed_fees']) :
-                        0;
+                $p = $a['payer']['payer_info'];
 
-                $amount = $offset['transactions'][0]['amount']['total'];
+                $o['payer'] = [
+                        'email' => $p['email'],
+                        'first_name' => $p['first_name'],
+                        'last_name' => $p['last_name'],
+                        'phone' => $p['phone'],
+                        'country_code' => $p['country_code'],
+                ];
 
-                if($var_fees !== 0 || $fixed_fees !== 0) {
-                        $amount_fees = $amount * ($var_fees / 100) + $fixed_fees;
-                        $offset['amount_fees'] = $amount_fees;
+                $o['shipping_address'] = [
+                        'recipient_name' => $p['shipping_address']['recipient_name'],
+                        'line1' => $p['shipping_address']['line1'],
+                        'city' => $p['shipping_address']['city'],
+                        'state' => $p['shipping_address']['state'],
+                        'zip' => $p['shipping_address']['postal_code'],
+                        'country_code' => $p['shipping_address']['country_code']
+                ];
+
+                $o['invoice_address'] = $o['shipping_address'];
+
+                foreach($t['item_list']['items'] as $item) {
+                        $tmp = array();
+                        $tmp['name'] = $item['name'];
+                        $tmp['price'] = $item['price'];
+                        $tmp['tax'] = $item['tax'];
+                        $tmp['quantity'] = $item['quantity'];
+
+                        $o['items'][] = $tmp;
                 }
-
-                $offset['id'] = str_replace('PAYID-','',$offset['id']);
-
-                return $offset;
+                return $o;
 	}
 
 }
