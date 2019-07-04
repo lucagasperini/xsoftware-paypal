@@ -86,17 +86,17 @@ class xs_paypal_plugin
         }
 
 
-        function get_approval_link($sale_order)
+        function get_approval_link($so)
         {
 
                 $list = new ItemList();
                 $total_by_prices = 0;
 
 
-                foreach($sale_order['items'] as $id => $values) {
+                foreach($so['items'] as $id => $values) {
                         $tmp = new Item();
                         $tmp->setName($values['name']);
-                        $tmp->setCurrency($sale_order['currency']);
+                        $tmp->setCurrency($so['transaction']['currency']);
                         $tmp->setQuantity($values['quantity']);
                         $tmp->setSku(strval($values['id']));
                         $tmp->setPrice($values['price']);
@@ -105,12 +105,12 @@ class xs_paypal_plugin
 
                 }
 
-                $discount = floatval($sale_order['untaxed']) - floatval($total_by_prices);
+                $discount = floatval($so['transaction']['subtotal']) - floatval($total_by_prices);
 
                 if($discount !== floatval(0)) {
                         $tmp = new Item();
                         $tmp->setName('Discount');
-                        $tmp->setCurrency($sale_order['currency']);
+                        $tmp->setCurrency($so['transaction']['currency']);
                         $tmp->setQuantity(1);
                         $tmp->setSku(0);
                         $tmp->setPrice($discount);
@@ -126,12 +126,12 @@ class xs_paypal_plugin
                 $payer->setPaymentMethod("paypal");
 
                 $details = new Details();
-                $details->setTax($sale_order['taxed']);
-                $details->setSubtotal($sale_order['untaxed']);
+                $details->setTax($so['transaction']['tax']);
+                $details->setSubtotal($so['transaction']['subtotal']);
 
                 $amount = new Amount();
-                $amount->setCurrency($sale_order['currency']);
-                $amount->setTotal($sale_order['total']);
+                $amount->setCurrency($so['transaction']['currency']);
+                $amount->setTotal($so['transaction']['total']);
                 $amount->setDetails($details);
 
                 $transaction = new Transaction();
@@ -246,7 +246,7 @@ class xs_paypal_plugin
                         'recipient_name' => $p['shipping_address']['recipient_name'],
                         'line1' => $p['shipping_address']['line1'],
                         'city' => $p['shipping_address']['city'],
-                        'state' => $p['shipping_address']['state'],
+                        'state_code' => $p['shipping_address']['state'],
                         'zip' => $p['shipping_address']['postal_code'],
                         'country_code' => $p['shipping_address']['country_code']
                 ];
