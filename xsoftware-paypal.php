@@ -142,7 +142,7 @@ class xs_paypal_plugin
                 // ### Redirect urls
                 // Set the urls that the buyer must be redirected to after
                 // payment approval/ cancellation.
-                $baseUrl = $this->options['sys']['checkout'];
+                $baseUrl = $so['urls']['checkout'];
                 $redirectUrls = new RedirectUrls();
                 $redirectUrls->setReturnUrl($baseUrl."?success=true")
                 ->setCancelUrl($baseUrl."?success=false");

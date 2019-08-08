@@ -12,10 +12,6 @@ class xs_paypal_options
                         'client_id' => '',
                         'client_secret' => '',
                         'mode' => 'sandbox'
-                ],
-                'fees' => [
-                        'fixed_fees' => 0,
-                        'var_fees' => 0,
                 ]
         );
 
@@ -83,29 +79,22 @@ class xs_paypal_options
                 if(isset($input['user']) && !empty($input['user']))
                         foreach($input['user'] as $key => $value)
                                 $current['user'][$key] = $value;
-                if(isset($input['fees']) && !empty($input['fees']))
-                        foreach($input['fees'] as $key => $value)
-                                $current['fees'][$key] = $value;
 
                 return $current;
         }
 
         function show()
         {
-                $tab = xs_framework::create_tabs( array(
+                $tab = xs_framework::create_tabs( [
                         'href' => '?page=xsoftware_paypal',
-                        'tabs' => array(
-                                'fees' => 'Fees',
+                        'tabs' => [
                                 'user' => 'User'
-                        ),
-                        'home' => 'fees',
+                        ],
+                        'home' => 'user',
                         'name' => 'main_tab'
-                ));
+                ]);
 
                 switch($tab) {
-                        case 'fees':
-                                $this->show_fees();
-                                return;
                         case 'user':
                                 $this->show_user();
                                 return;
@@ -167,46 +156,6 @@ class xs_paypal_options
                         'section_setting',
                         $options
                 );
-        }
-
-        function show_fees()
-        {
-                $fees = $this->options['fees'];
-
-                $options = array(
-                        'name' => 'xs_options_paypal[fees][fixed_fees]',
-                        'value' => floatval($fees['fixed_fees']),
-                        'step' => 0.01,
-                        'max' => 99999999,
-                        'echo' => TRUE
-                );
-
-                add_settings_field(
-                        $options['name'],
-                        'Set fixed fees',
-                        'xs_framework::create_input_number',
-                        'paypal',
-                        'section_setting',
-                        $options
-                );
-
-                $options = array(
-                        'name' => 'xs_options_paypal[fees][var_fees]',
-                        'value' => floatval($fees['var_fees']),
-                        'step' => 0.0001,
-                        'max' => 100,
-                        'echo' => TRUE
-                );
-
-                add_settings_field(
-                        $options['name'],
-                        'Set variable fees (%)',
-                        'xs_framework::create_input_number',
-                        'paypal',
-                        'section_setting',
-                        $options
-                );
-
         }
 
 }
