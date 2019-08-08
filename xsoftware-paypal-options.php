@@ -211,8 +211,8 @@ class xs_paypal_options
 
 }
 
-endif;
-
 $xs_paypal_options = new xs_paypal_options();
+
+endif;
 
 ?>

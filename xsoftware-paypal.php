@@ -264,12 +264,12 @@ class xs_paypal_plugin
                         $o['items'][] = $tmp;
                 }
                 return $o;
-	}
+        }
 
 }
 
-endif;
-
 $xs_paypal_plugin = new xs_paypal_plugin();
+
+endif;
 
 ?>
