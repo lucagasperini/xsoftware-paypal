@@ -172,10 +172,8 @@ class xs_paypal_plugin
                 $approvalUrl = $payment->getApprovalLink();
 
                 include_once 'paypal-button.php';
-                /* FIXME: Dont print directly! */
-                $payment['html'] = print_paypal_btn($approvalUrl);
 
-                return $payment;
+                return print_paypal_btn($approvalUrl);
         }
 
         function checkout_validation()
