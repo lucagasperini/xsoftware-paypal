@@ -8,7 +8,7 @@ function print_paypal_btn($url)
         wp_enqueue_style('xs_paypal_style', plugins_url('style/paypal.min.css', __FILE__));
 
 
-        echo '<a href="'.$url.'" ><div role="button" data-button=""
+        return '<a href="'.$url.'" ><div role="button" data-button=""
 data-funding-source="paypal" class="paypal-button
 paypal-button-number-0 paypal-button-layout-vertical paypal-button-shape-rect
 paypal-button-number-multiple paypal-button-env-sandbox paypal-button-label-paypal
